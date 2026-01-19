@@ -35,17 +35,12 @@ npm install
    MONGODB_URI=mongodb://localhost:27017/badminton-tournament
    ```
 
-3. **Seed the database (optional):**
-   - Make a POST request to `/api/seed` to populate initial data
-   - Or use a tool like Postman/Thunder Client
-   - Or run: `curl -X POST http://localhost:3000/api/seed`
-
-4. **Start the development server:**
+3. **Start the development server:**
 ```bash
 npm run dev
 ```
 
-5. **Open your browser:**
+4. **Open your browser:**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Tech Stack
@@ -67,5 +62,4 @@ npm run dev
 - `GET /api/rounds` - Fetch all rounds
 - `POST /api/rounds` - Create round
 - `PUT /api/rounds` - Update round
-- `POST /api/seed` - Seed database with initial data
 

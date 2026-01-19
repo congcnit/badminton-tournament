@@ -53,8 +53,8 @@ const normalizeTeam = (doc: any, allPlayers: Player[]): Team => ({
   id: doc.id,
   name: doc.name,
   players: doc.players
-    .map((playerId: string) => allPlayers.find((p) => p.id === playerId))
-    .filter((p): p is Player => p !== undefined),
+    .map((playerId: string) => allPlayers.find((p: Player) => p.id === playerId))
+    .filter((p: Player | undefined): p is Player => p !== undefined),
 });
 
 const normalizeRound = (doc: any): Round => ({
