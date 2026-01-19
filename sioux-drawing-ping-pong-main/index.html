@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sioux's Ping Pong Tournament 2025</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏓 Sioux's Ping Pong Tournament 2025</h1>
+            <p>Select two team members and assign them to a table!</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Side - Team Selection -->
+            <div class="selection-panel">
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-number" id="matches-count">0</span>
+                        <span class="stat-label">Matches</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="remaining-count">24</span>
+                        <span class="stat-label">Remaining</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="selected-count">0</span>
+                        <span class="stat-label">Selected</span>
+                    </div>
+                </div>
+
+                <div class="selection-area">
+                    <div class="selection-instructions">
+                        <h3>Select Two Team Members</h3>
+                        <p>Click on two team members to create a match</p>
+                    </div>
+                    
+                    <!-- Tier Tabs -->
+                    <div class="tier-tabs">
+                        <div class="tab-button active" data-tier="chicken">
+                            <img src="tiers/chicken.png" alt="Chicken" class="tab-icon">
+                            <span class="tab-label">Chicken</span>
+                        </div>
+                        <div class="tab-button" data-tier="hawk">
+                            <img src="tiers/hawk.png" alt="Hawk" class="tab-icon">
+                            <span class="tab-label">Hawk</span>
+                        </div>
+                        <div class="tab-button" data-tier="eagle">
+                            <img src="tiers/eagle.png" alt="Eagle" class="tab-icon">
+                            <span class="tab-label">Eagle</span>
+                        </div>
+                        <div class="tab-button" data-tier="phoenix">
+                            <img src="tiers/phoenix.png" alt="Phoenix" class="tab-icon">
+                            <span class="tab-label">Phoenix</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Tier Content -->
+                    <div class="tier-content">
+                        <div class="tier-panel active" id="chicken-panel">
+                            <div class="team-grid" id="chicken-grid">
+                                <!-- Chicken tier members will be populated here -->
+                            </div>
+                        </div>
+                        <div class="tier-panel" id="hawk-panel">
+                            <div class="team-grid" id="hawk-grid">
+                                <!-- Hawk tier members will be populated here -->
+                            </div>
+                        </div>
+                        <div class="tier-panel" id="eagle-panel">
+                            <div class="team-grid" id="eagle-grid">
+                                <!-- Eagle tier members will be populated here -->
+                            </div>
+                        </div>
+                        <div class="tier-panel" id="phoenix-panel">
+                            <div class="team-grid" id="phoenix-grid">
+                                <!-- Phoenix tier members will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-secondary" id="shuffle-btn">🔄 Shuffle</button>
+                    <button class="btn btn-reset" id="reset-btn">🔄 Reset</button>
+                    <button class="btn btn-clear" id="clear-selection-btn">❌ Clear Selection</button>
+                </div>
+            </div>
+
+            <!-- Right Side - Tournament Tables -->
+            <div class="tournament-panel">
+                <h2>Tournament Tables</h2>
+                <div class="tables-container">
+                    <div class="table-row">
+                        <div class="table-section">
+                            <h3>Table A</h3>
+                            <div class="table" id="table-a" data-table="a">
+                                <div class="table-header">
+                                    <span class="table-name">Table A</span>
+                                    <span class="table-count">0/4</span>
+                                </div>
+                                <div class="table-couples" id="table-a-couples">
+                                    <!-- Couples will be added here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-section">
+                            <h3>Table B</h3>
+                            <div class="table" id="table-b" data-table="b">
+                                <div class="table-header">
+                                    <span class="table-name">Table B</span>
+                                    <span class="table-count">0/4</span>
+                                </div>
+                                <div class="table-couples" id="table-b-couples">
+                                    <!-- Couples will be added here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-row">
+                        <div class="table-section">
+                            <h3>Table C</h3>
+                            <div class="table" id="table-c" data-table="c">
+                                <div class="table-header">
+                                    <span class="table-name">Table C</span>
+                                    <span class="table-count">0/4</span>
+                                </div>
+                                <div class="table-couples" id="table-c-couples">
+                                    <!-- Couples will be added here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Selection Modal -->
+    <div class="modal" id="table-modal">
+        <div class="modal-content">
+            <div class="table-selection">
+                <h2>Select a Table</h2>
+                <p>Choose which table to assign this match:</p>
+                <div class="table-options">
+                    <button class="table-option" data-table="a">
+                        <span class="table-option-name">Table A</span>
+                        <span class="table-option-count" id="table-a-option-count">0/4</span>
+                    </button>
+                    <button class="table-option" data-table="b">
+                        <span class="table-option-name">Table B</span>
+                        <span class="table-option-count" id="table-b-option-count">0/4</span>
+                    </button>
+                    <button class="table-option" data-table="c">
+                        <span class="table-option-name">Table C</span>
+                        <span class="table-option-count" id="table-c-option-count">0/4</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Animation Modal -->
+    <div class="modal" id="match-modal">
+        <div class="modal-content">
+            <div class="match-animation">
+                <div class="match-text">
+                    <h2>IT'S A</h2>
+                    <h2>MATCH!</h2>
+                </div>
+                
+                <div class="matched-pair">
+                    <div class="matched-person">
+                        <img src="" alt="" id="match-person-1">
+                        <h4 id="match-name-1"></h4>
+                    </div>
+                    
+                    <div class="table-tennis-icons">
+                        <span class="icon1">🏓</span>
+                        <span class="icon2">🏓</span>
+                    </div>
+                    
+                    <div class="matched-person">
+                        <img src="" alt="" id="match-person-2">
+                        <h4 id="match-name-2"></h4>
+                    </div>
+                </div>
+                
+                <p class="match-message">These two will make an amazing team!</p>
+                    
+                <button class="btn btn-primary" id="close-modal">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
