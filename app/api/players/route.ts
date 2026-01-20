@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/apiAuth';
 import connectDB from '@/lib/mongodb';
 import { Player } from '@/models/Player';
 
@@ -14,6 +15,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     await connectDB();
     const body = await request.json();

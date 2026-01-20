@@ -6,6 +6,9 @@ interface TournamentStore extends TournamentState {
   // Loading states
   isLoading: boolean;
   error: string | null;
+  pendingRequests: number;
+  hasHydrated: boolean;
+  hydrate: (data: TournamentState) => void;
   
   // Teams
   createTeam: (name: string) => Promise<void>;
@@ -77,57 +80,93 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   rounds: [],
   isLoading: false,
   error: null,
+  pendingRequests: 0,
+  hasHydrated: false,
+
+  hydrate: (data) => {
+    set((state) => {
+      if (state.hasHydrated) {
+        return state;
+      }
+      return {
+        ...state,
+        players: data.players,
+        teams: data.teams,
+        rounds: data.rounds,
+        hasHydrated: true,
+      };
+    });
+  },
 
   fetchPlayers: async () => {
-    set({ isLoading: true, error: null });
+    set((state) => ({
+      pendingRequests: state.pendingRequests + 1,
+      isLoading: true,
+      error: null,
+    }));
     try {
       const response = await fetch('/api/players');
       if (!response.ok) throw new Error('Failed to fetch players');
       const data = await response.json();
       const players = data.map(normalizePlayer);
-      set({ players, isLoading: false });
+      set({ players });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch players', isLoading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch players' });
+    } finally {
+      set((state) => {
+        const pendingRequests = Math.max(0, state.pendingRequests - 1);
+        return { pendingRequests, isLoading: pendingRequests > 0 };
+      });
     }
   },
 
   fetchTeams: async () => {
-    set({ isLoading: true, error: null });
+    set((state) => ({
+      pendingRequests: state.pendingRequests + 1,
+      isLoading: true,
+      error: null,
+    }));
     try {
       const { players } = get();
       const response = await fetch('/api/teams');
       if (!response.ok) throw new Error('Failed to fetch teams');
       const data = await response.json();
       const teams = data.map((doc: any) => normalizeTeam(doc, players));
-      set({ teams, isLoading: false });
+      set({ teams });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch teams', isLoading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch teams' });
+    } finally {
+      set((state) => {
+        const pendingRequests = Math.max(0, state.pendingRequests - 1);
+        return { pendingRequests, isLoading: pendingRequests > 0 };
+      });
     }
   },
 
   fetchRounds: async () => {
-    set({ isLoading: true, error: null });
+    set((state) => ({
+      pendingRequests: state.pendingRequests + 1,
+      isLoading: true,
+      error: null,
+    }));
     try {
       const response = await fetch('/api/rounds');
       if (!response.ok) throw new Error('Failed to fetch rounds');
       const data = await response.json();
       const rounds = data.map(normalizeRound);
-      set({ rounds, isLoading: false });
+      set({ rounds });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch rounds', isLoading: false });
+      set({ error: error instanceof Error ? error.message : 'Failed to fetch rounds' });
+    } finally {
+      set((state) => {
+        const pendingRequests = Math.max(0, state.pendingRequests - 1);
+        return { pendingRequests, isLoading: pendingRequests > 0 };
+      });
     }
   },
 
   fetchAll: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      await get().fetchPlayers();
-      await get().fetchTeams();
-      await get().fetchRounds();
-      set({ isLoading: false });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch data', isLoading: false });
-    }
+    await Promise.all([get().fetchPlayers(), get().fetchTeams(), get().fetchRounds()]);
   },
 
   addPlayer: async (playerData) => {
@@ -164,6 +203,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         players: state.players.map((p) =>
           p.id === playerId ? { ...p, ...playerData } : p
         ),
+        teams: state.teams.map((team) => ({
+          ...team,
+          players: team.players.map((player) =>
+            player.id === playerId ? { ...player, ...playerData } : player
+          ),
+        })),
       }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update player' });

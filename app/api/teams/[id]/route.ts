@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/apiAuth';
 import connectDB from '@/lib/mongodb';
 import { Team } from '@/models/Team';
 
@@ -6,6 +7,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const unauthorized = requireAdmin();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     await connectDB();
     const result = await Team.deleteOne({ id: params.id });

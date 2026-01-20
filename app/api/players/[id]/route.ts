@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/apiAuth';
 import connectDB from '@/lib/mongodb';
 import { Player } from '@/models/Player';
 
@@ -6,6 +7,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const unauthorized = requireAdmin();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     await connectDB();
     const body = await request.json();
@@ -32,6 +38,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const unauthorized = requireAdmin();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   try {
     await connectDB();
     const result = await Player.deleteOne({ id: params.id });
