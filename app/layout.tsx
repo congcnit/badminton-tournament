@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Badminton Tournament Manager",
+  title: "Sioux Badminton Tournament",
   description: "Manage your team-based badminton tournament",
 };
 

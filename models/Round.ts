@@ -27,6 +27,7 @@ export interface IRound {
   team2Lineup: string[];
   matches: IMatch[];
   completed: boolean;
+  subRounds?: string[][];
 }
 
 const GameSchema = new Schema<IGame>({
@@ -56,6 +57,7 @@ const RoundSchema = new Schema<IRound>(
     team2Lineup: [{ type: String }],
     matches: [MatchSchema],
     completed: { type: Boolean, default: false },
+    subRounds: [[{ type: String }]],
   },
   { timestamps: true }
 );

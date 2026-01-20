@@ -156,8 +156,12 @@ export default function TeamsClient({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Team Builder</h1>
-            <p className="text-gray-400">Drag and drop players to build your teams</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {isAdmin ? 'Team Builder' : 'Teams'}
+            </h1>
+            <p className="text-gray-400">
+              {isAdmin ? 'Drag and drop players to build your teams' : 'View teams and players'}
+            </p>
           </div>
           {isAdmin && (
             <button

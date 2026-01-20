@@ -28,6 +28,7 @@ interface TournamentStore extends TournamentState {
   updateMatchPlayers: (roundId: string, matchId: string, team: 'team1' | 'team2', playerIds: string[]) => Promise<void>;
   updateGameScore: (roundId: string, matchId: string, gameIndex: number, team1Score: number, team2Score: number) => Promise<void>;
   startMatch: (roundId: string, matchId: string) => Promise<void>;
+  stopMatch: (roundId: string, matchId: string) => Promise<void>;
   completeMatch: (roundId: string, matchId: string) => Promise<void>;
   completeRound: (roundId: string) => Promise<void>;
   updateRound: (round: Round) => Promise<void>;
@@ -72,6 +73,7 @@ const normalizeRound = (doc: any): Round => ({
     games: match.games || [],
   })),
   completed: doc.completed || false,
+  subRounds: doc.subRounds || [],
 });
 
 export const useTournamentStore = create<TournamentStore>((set, get) => ({
@@ -425,6 +427,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       team2Lineup: team2 ? team2.players.map((p) => p.id) : [],
       matches: [],
       completed: false,
+      subRounds: [],
     };
 
     try {
@@ -490,6 +493,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     const updatedRound: Round = {
       ...round,
       matches: [...round.matches, match],
+      subRounds: [],
     };
 
     try {
@@ -516,6 +520,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     const updatedRound: Round = {
       ...round,
       matches: round.matches.filter((m) => m.id !== matchId),
+      subRounds: [],
     };
 
     try {
@@ -546,6 +551,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           ? { ...match, [`${team}Players`]: playerIds }
           : match
       ),
+      subRounds: [],
     };
 
     try {
@@ -664,6 +670,25 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       }
     }
 
+    const subRounds = round.subRounds || [];
+    if (subRounds.length === 2) {
+      const activeSubRoundIndex = subRounds.findIndex((group) =>
+        group.some((id) => {
+          const groupedMatch = round.matches.find((m) => m.id === id);
+          return groupedMatch?.startedAt && !groupedMatch?.completedAt;
+        })
+      );
+      if (activeSubRoundIndex !== -1) {
+        const matchSubRoundIndex = subRounds.findIndex((group) => group.includes(matchId));
+        if (matchSubRoundIndex !== -1 && matchSubRoundIndex !== activeSubRoundIndex) {
+          const errorMsg = 'Cannot start match: another sub-round is already in progress';
+          set({ error: errorMsg });
+          alert(errorMsg);
+          return;
+        }
+      }
+    }
+
     const startedAt = new Date().toISOString();
 
     const updatedRound: Round = {
@@ -688,6 +713,39 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to start match' });
+    }
+  },
+
+  stopMatch: async (roundId, matchId) => {
+    const { rounds } = get();
+    const round = rounds.find((r) => r.id === roundId);
+    if (!round) return;
+
+    const match = round.matches.find((m) => m.id === matchId);
+    if (!match) return;
+
+    const updatedRound: Round = {
+      ...round,
+      matches: round.matches.map((m) =>
+        m.id === matchId
+          ? { ...m, startedAt: undefined, completedAt: undefined, winner: undefined, games: [] }
+          : m
+      ),
+    };
+
+    try {
+      const response = await fetch('/api/rounds', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: roundId,
+          matches: updatedRound.matches,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to stop match');
+      set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to stop match' });
     }
   },
 
@@ -770,6 +828,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           team2Lineup: round.team2Lineup,
           matches: round.matches,
           completed: round.completed,
+          subRounds: round.subRounds || [],
         }),
       });
       if (!response.ok) throw new Error('Failed to update round');

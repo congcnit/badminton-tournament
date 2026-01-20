@@ -9,7 +9,7 @@ import { MatchType, Player, Round, Team } from '@/types';
 import { validatePlayerGenderForMatch } from '@/utils/matchValidation';
 import { validatePlayerAdditionToMatch, validateRoundPlayerAssignments } from '@/utils/roundValidation';
 
-const MATCH_TYPES: MatchType[] = ["Men's Doubles", "Mixed Doubles", "Women's Doubles"];
+const MATCH_TYPES: MatchType[] = ["Mixed Doubles", "Men's Doubles","Women's Doubles"];
 
 interface RoundsClientProps {
   initialPlayers: Player[];
@@ -33,8 +33,10 @@ export default function RoundsClient({
     updateMatchPlayers,
     updateGameScore,
     startMatch,
+    stopMatch,
     completeMatch,
     completeRound,
+    updateRound,
     hasHydrated,
     hydrate,
   } = useTournamentStore();
@@ -73,6 +75,31 @@ export default function RoundsClient({
     () => teams.find((t) => t.id === selectedRound?.team2Id),
     [teams, selectedRound?.team2Id]
   );
+  const startDisabledReasons = useMemo(() => {
+    const reasons = new Map<string, string | null>();
+    if (!selectedRound || !selectedRound.subRounds || selectedRound.subRounds.length !== 2) {
+      return reasons;
+    }
+    const groups = selectedRound.subRounds;
+    const activeSubRoundIndex = groups.findIndex((group) =>
+      group.some((matchId) => {
+        const match = selectedRound.matches.find((m) => m.id === matchId);
+        return match?.startedAt && !match?.completedAt;
+      })
+    );
+    if (activeSubRoundIndex === -1) {
+      return reasons;
+    }
+    groups.forEach((group, index) => {
+      if (index === activeSubRoundIndex) {
+        return;
+      }
+      group.forEach((matchId) => {
+        reasons.set(matchId, 'Another sub-round is already in progress');
+      });
+    });
+    return reasons;
+  }, [selectedRound]);
   const roundScores = useMemo(() => {
     const scores = new Map<string, { team1: number; team2: number }>();
     rounds.forEach((round) => {
@@ -250,11 +277,120 @@ export default function RoundsClient({
     startMatch(selectedRound.id, matchId);
   };
 
+  const handleStopMatch = (matchId: string) => {
+    if (!isAdmin) return;
+    if (!selectedRound) return;
+    if (confirm('Stop this match? Scores and winner will be cleared.')) {
+      stopMatch(selectedRound.id, matchId);
+    }
+  };
+
   const handleCompleteMatch = (matchId: string) => {
     if (!isAdmin) return;
     if (!selectedRound) return;
     completeMatch(selectedRound.id, matchId);
   };
+
+  const arrangeSubRounds = (round: Round) => {
+    const matches = round.matches;
+    if (matches.length !== 6) {
+      return null;
+    }
+    const hasUnassigned = matches.some(
+      (match) => match.team1Players.length < 2 || match.team2Players.length < 2
+    );
+    if (hasUnassigned) {
+      return null;
+    }
+
+    const matchIds = matches.map((match) => match.id);
+    const matchPlayers = new Map(
+      matches.map((match) => [
+        match.id,
+        new Set([...match.team1Players, ...match.team2Players]),
+      ])
+    );
+
+    const hasConflict = (a: string, b: string) => {
+      const aPlayers = matchPlayers.get(a);
+      const bPlayers = matchPlayers.get(b);
+      if (!aPlayers || !bPlayers) return false;
+      for (const playerId of aPlayers) {
+        if (bPlayers.has(playerId)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const isGroupValid = (group: string[]) => {
+      for (let i = 0; i < group.length; i += 1) {
+        for (let j = i + 1; j < group.length; j += 1) {
+          if (hasConflict(group[i], group[j])) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    let arranged: string[][] | null = null;
+    for (let i = 0; i < matchIds.length && !arranged; i += 1) {
+      for (let j = i + 1; j < matchIds.length && !arranged; j += 1) {
+        for (let k = j + 1; k < matchIds.length && !arranged; k += 1) {
+          const groupA = [matchIds[i], matchIds[j], matchIds[k]];
+          if (!isGroupValid(groupA)) {
+            continue;
+          }
+          const groupB = matchIds.filter((id) => !groupA.includes(id));
+          if (groupB.length !== 3) {
+            continue;
+          }
+          if (isGroupValid(groupB)) {
+            arranged = [groupA, groupB];
+          }
+        }
+      }
+    }
+
+    if (!arranged) {
+      return null;
+    }
+
+    const normalizeGroup = (group: string[]) => [...group].sort().join('|');
+    const arrangedKey = arranged.map(normalizeGroup).sort().join('::');
+    const currentSubRounds = round.subRounds || [];
+    const currentKey =
+      currentSubRounds.length === 2
+        ? currentSubRounds.map(normalizeGroup).sort().join('::')
+        : '';
+
+    if (currentKey && currentKey === arrangedKey) {
+      return null;
+    }
+
+    const arrangedMatches = arranged
+      .flat()
+      .map((matchId) => matches.find((item) => item.id === matchId))
+      .filter((match): match is (typeof matches)[number] => Boolean(match));
+
+    return { subRounds: arranged, matches: arrangedMatches };
+  };
+
+  useEffect(() => {
+    if (!isAdmin || !selectedRound) return;
+    if (selectedRound.matches.length !== 6) return;
+    if (
+      selectedRound.matches.some(
+        (match) => match.team1Players.length < 2 || match.team2Players.length < 2
+      )
+    ) {
+      return;
+    }
+    const arrangement = arrangeSubRounds(selectedRound);
+    if (!arrangement) return;
+    updateRound({ ...selectedRound, ...arrangement });
+  }, [isAdmin, selectedRound, updateRound]);
 
   const handleCompleteRound = () => {
     if (!isAdmin || !selectedRound || !team1 || !team2) return;
@@ -316,8 +452,12 @@ export default function RoundsClient({
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Round Manager</h1>
-          <p className="text-gray-400">Create rounds and manage matches</p>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            {isAdmin ? 'Match Manager' : 'Matches'}
+          </h1>
+          <p className="text-gray-400">
+            {isAdmin ? 'Create rounds and manage matches' : 'View rounds and matches'}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -454,7 +594,7 @@ export default function RoundsClient({
                 })}
                 {rounds.length === 0 && (
                   <p className="text-gray-500 text-sm text-center py-4">
-                    No rounds created yet
+                    {isAdmin ? 'No rounds created yet' : 'No rounds available yet'}
                   </p>
                 )}
               </div>
@@ -472,35 +612,25 @@ export default function RoundsClient({
                         {team1?.name} vs {team2?.name}
                       </p>
                     </div>
-                    {selectedRound.completed && roundScores.get(selectedRound.id) && (
-                      <span className="inline-flex items-center gap-2 text-sm font-bold bg-green-500/20 text-green-100 border border-green-400/40 px-3 py-1 rounded-full">
-                        Round score {roundScores.get(selectedRound.id)?.team1} - {roundScores.get(selectedRound.id)?.team2}
-                      </span>
-                    )}
-                    {isAdmin && !selectedRound.completed && (
-                      <button
-                        onClick={handleCompleteRound}
-                        disabled={
-                          selectedRound.matches.length === 0 ||
-                          selectedRound.matches.some((match) => !match.winner || !match.completedAt)
-                        }
-                        className={`${
-                          selectedRound.matches.length === 0 ||
-                          selectedRound.matches.some((match) => !match.winner || !match.completedAt)
-                            ? 'bg-gray-500 cursor-not-allowed opacity-60'
-                            : 'bg-green-600 hover:bg-green-700'
-                        } text-white px-4 py-2 rounded-lg font-semibold transition-all`}
-                        title={
-                          selectedRound.matches.length === 0
-                            ? 'Add at least one match to complete the round'
-                            : selectedRound.matches.some((match) => !match.winner || !match.completedAt)
-                            ? 'Complete all matches to complete the round'
-                            : 'Mark this round as completed'
-                        }
-                      >
-                        Complete Round
-                      </button>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {selectedRound.completed && roundScores.get(selectedRound.id) && (
+                        <span className="inline-flex items-center gap-2 text-sm font-bold bg-green-500/20 text-green-100 border border-green-400/40 px-3 py-1 rounded-full">
+                          Round score {roundScores.get(selectedRound.id)?.team1} - {roundScores.get(selectedRound.id)?.team2}
+                        </span>
+                      )}
+                      {isAdmin &&
+                        !selectedRound.completed &&
+                        selectedRound.matches.length > 0 &&
+                        selectedRound.matches.every((match) => match.winner && match.completedAt) && (
+                          <button
+                            onClick={handleCompleteRound}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all"
+                            title="Mark this round as completed"
+                          >
+                            Complete Round
+                          </button>
+                        )}
+                    </div>
                   </div>
 
                   <div className="mb-4">
@@ -551,47 +681,108 @@ export default function RoundsClient({
                     )}
 
                     <div className="space-y-3">
-                      {selectedRound.matches.map((match) => {
-                        const matchTeam1Players = (team1?.players || []).filter((p) =>
-                          match.team1Players.includes(p.id)
-                        );
-                        const matchTeam2Players = (team2?.players || []).filter((p) =>
-                          match.team2Players.includes(p.id)
-                        );
-
-                        return (
-                          <MatchCard
-                            key={match.id}
-                            match={match}
-                            team1Name={team1?.name || ''}
-                            team2Name={team2?.name || ''}
-                            team1Players={matchTeam1Players}
-                            team2Players={matchTeam2Players}
-                            allTeam1Players={team1?.players || []}
-                            allTeam2Players={team2?.players || []}
-                            allMatches={selectedRound.matches}
-                            round={selectedRound}
-                            team1PlayerIds={team1?.players.map((p) => p.id) || []}
-                            team2PlayerIds={team2?.players.map((p) => p.id) || []}
-                            onGameScoreUpdate={(gameIndex, team1Score, team2Score) =>
-                              handleGameScoreUpdate(match.id, gameIndex, team1Score, team2Score)
-                            }
-                            onAddPlayer={(team, playerId) =>
-                              handleAddPlayer(match.id, team, playerId)
-                            }
-                            onPlayerRemove={(team, playerId) =>
-                              handleRemovePlayer(match.id, team, playerId)
-                            }
-                            onRemove={() => handleRemoveMatch(match.id)}
-                            onStartMatch={() => handleStartMatch(match.id)}
-                            onCompleteMatch={() => handleCompleteMatch(match.id)}
-                            editable={isAdmin && !selectedRound.completed}
-                          />
-                        );
-                      })}
+                      {selectedRound.subRounds && selectedRound.subRounds.length === 2
+                        ? selectedRound.subRounds.map((group, index) => (
+                            <div
+                              key={`subround-${index}`}
+                              className="bg-gray-900/40 border border-gray-700 rounded-xl p-4 space-y-3"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                <span className="text-sm font-semibold text-emerald-200">
+                                  Sub-round {index + 1}
+                                </span>
+                              </div>
+                              {group.map((matchId) => {
+                                const match = selectedRound.matches.find((m) => m.id === matchId);
+                                if (!match) {
+                                  return null;
+                                }
+                                const matchTeam1Players = (team1?.players || []).filter((p) =>
+                                  match.team1Players.includes(p.id)
+                                );
+                                const matchTeam2Players = (team2?.players || []).filter((p) =>
+                                  match.team2Players.includes(p.id)
+                                );
+                                return (
+                                  <MatchCard
+                                    key={match.id}
+                                    match={match}
+                                    team1Name={team1?.name || ''}
+                                    team2Name={team2?.name || ''}
+                                    team1Players={matchTeam1Players}
+                                    team2Players={matchTeam2Players}
+                                    allTeam1Players={team1?.players || []}
+                                    allTeam2Players={team2?.players || []}
+                                    allMatches={selectedRound.matches}
+                                    round={selectedRound}
+                                    team1PlayerIds={team1?.players.map((p) => p.id) || []}
+                                    team2PlayerIds={team2?.players.map((p) => p.id) || []}
+                                    onGameScoreUpdate={(gameIndex, team1Score, team2Score) =>
+                                      handleGameScoreUpdate(match.id, gameIndex, team1Score, team2Score)
+                                    }
+                                    onAddPlayer={(team, playerId) =>
+                                      handleAddPlayer(match.id, team, playerId)
+                                    }
+                                    onPlayerRemove={(team, playerId) =>
+                                      handleRemovePlayer(match.id, team, playerId)
+                                    }
+                                    onRemove={() => handleRemoveMatch(match.id)}
+                                    onStartMatch={() => handleStartMatch(match.id)}
+                                    onStopMatch={() => handleStopMatch(match.id)}
+                                    onCompleteMatch={() => handleCompleteMatch(match.id)}
+                                    startDisabledReason={startDisabledReasons.get(match.id) || null}
+                                    editable={isAdmin && !selectedRound.completed}
+                                  />
+                                );
+                              })}
+                            </div>
+                          ))
+                        : selectedRound.matches.map((match) => {
+                            const matchTeam1Players = (team1?.players || []).filter((p) =>
+                              match.team1Players.includes(p.id)
+                            );
+                            const matchTeam2Players = (team2?.players || []).filter((p) =>
+                              match.team2Players.includes(p.id)
+                            );
+                            
+                            return (
+                              <MatchCard
+                                key={match.id}
+                                match={match}
+                                team1Name={team1?.name || ''}
+                                team2Name={team2?.name || ''}
+                                team1Players={matchTeam1Players}
+                                team2Players={matchTeam2Players}
+                                allTeam1Players={team1?.players || []}
+                                allTeam2Players={team2?.players || []}
+                                allMatches={selectedRound.matches}
+                                round={selectedRound}
+                                team1PlayerIds={team1?.players.map((p) => p.id) || []}
+                                team2PlayerIds={team2?.players.map((p) => p.id) || []}
+                                onGameScoreUpdate={(gameIndex, team1Score, team2Score) =>
+                                  handleGameScoreUpdate(match.id, gameIndex, team1Score, team2Score)
+                                }
+                                onAddPlayer={(team, playerId) =>
+                                  handleAddPlayer(match.id, team, playerId)
+                                }
+                                onPlayerRemove={(team, playerId) =>
+                                  handleRemovePlayer(match.id, team, playerId)
+                                }
+                                onRemove={() => handleRemoveMatch(match.id)}
+                                onStartMatch={() => handleStartMatch(match.id)}
+                                onStopMatch={() => handleStopMatch(match.id)}
+                                onCompleteMatch={() => handleCompleteMatch(match.id)}
+                                startDisabledReason={startDisabledReasons.get(match.id) || null}
+                                editable={isAdmin && !selectedRound.completed}
+                              />
+                            );
+                          })}
                       {selectedRound.matches.length === 0 && (
                         <p className="text-gray-500 text-center py-4">
-                          No matches added yet. Click buttons above to add matches.
+                          {isAdmin
+                            ? 'No matches added yet. Click buttons above to add matches.'
+                            : 'No matches available yet.'}
                         </p>
                       )}
                     </div>
@@ -602,7 +793,9 @@ export default function RoundsClient({
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 p-12 text-center">
                 <p className="text-gray-400 text-lg">
                   {rounds.length === 0
-                    ? 'Create your first round to get started'
+                    ? isAdmin
+                      ? 'Create your first round to get started'
+                      : 'No rounds available yet'
                     : 'Select a round to view details'}
                 </p>
               </div>

@@ -1,11 +1,6 @@
-import RoundsClient from '@/components/pages/RoundsClient';
-import { getTournamentData } from '@/lib/serverData';
+import { redirect } from 'next/navigation';
 
-export default async function RoundsPage() {
-  const { players, teams, rounds } = await getTournamentData();
-
-  return (
-    <RoundsClient initialPlayers={players} initialTeams={teams} initialRounds={rounds} />
-  );
+export default function RoundsPage() {
+  redirect('/matches');
 }
 

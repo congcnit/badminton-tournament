@@ -167,8 +167,12 @@ export default function PlayersClient({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Players Management</h1>
-            <p className="text-gray-400">Manage tournament players</p>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              {isAdmin ? 'Players Management' : 'Players'}
+            </h1>
+            <p className="text-gray-400">
+              {isAdmin ? 'Manage tournament players' : 'View tournament players'}
+            </p>
           </div>
           {isAdmin && (
             <button
@@ -328,32 +332,34 @@ export default function PlayersClient({
                             onDragStart={() => handleDragStart(player.id)}
                             onDragEnd={handleDragEnd}
                           />
-                          <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                              onClick={() => handleEdit(player)}
-                              disabled={isSubmitting || showAddForm}
-                              className={`${
-                                isSubmitting || showAddForm
-                                  ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
-                              title="Edit player"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDelete(player.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
-                              title="Delete player"
-                            >
-                              ×
-                            </button>
-                          </div>
+                          {isAdmin && (
+                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={() => handleEdit(player)}
+                                disabled={isSubmitting || showAddForm}
+                                className={`${
+                                  isSubmitting || showAddForm
+                                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                                } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
+                                title="Edit player"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(player.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
+                                title="Delete player"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {playersByLevel['Nguyên Anh'].length === 0 && (
                         <p className="text-gray-500 text-sm italic w-full text-center py-4">
-                          Drop players here
+                          {isAdmin ? 'Drop players here' : 'No players in this level'}
                         </p>
                       )}
                     </div>
@@ -383,32 +389,34 @@ export default function PlayersClient({
                             onDragStart={() => handleDragStart(player.id)}
                             onDragEnd={handleDragEnd}
                           />
-                          <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                              onClick={() => handleEdit(player)}
-                              disabled={isSubmitting || showAddForm}
-                              className={`${
-                                isSubmitting || showAddForm
-                                  ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
-                              title="Edit player"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDelete(player.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
-                              title="Delete player"
-                            >
-                              ×
-                            </button>
-                          </div>
+                          {isAdmin && (
+                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={() => handleEdit(player)}
+                                disabled={isSubmitting || showAddForm}
+                                className={`${
+                                  isSubmitting || showAddForm
+                                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                                } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
+                                title="Edit player"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(player.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
+                                title="Delete player"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {playersByLevel['Kết Đan'].length === 0 && (
                         <p className="text-gray-500 text-sm italic w-full text-center py-4">
-                          Drop players here
+                          {isAdmin ? 'Drop players here' : 'No players in this level'}
                         </p>
                       )}
                     </div>
@@ -438,32 +446,34 @@ export default function PlayersClient({
                             onDragStart={() => handleDragStart(player.id)}
                             onDragEnd={handleDragEnd}
                           />
-                          <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                              onClick={() => handleEdit(player)}
-                              disabled={isSubmitting || showAddForm}
-                              className={`${
-                                isSubmitting || showAddForm
-                                  ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
-                              title="Edit player"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDelete(player.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
-                              title="Delete player"
-                            >
-                              ×
-                            </button>
-                          </div>
+                          {isAdmin && (
+                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={() => handleEdit(player)}
+                                disabled={isSubmitting || showAddForm}
+                                className={`${
+                                  isSubmitting || showAddForm
+                                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                                } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
+                                title="Edit player"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(player.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
+                                title="Delete player"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {playersByLevel['Trúc Cơ'].length === 0 && (
                         <p className="text-gray-500 text-sm italic w-full text-center py-4">
-                          Drop players here
+                          {isAdmin ? 'Drop players here' : 'No players in this level'}
                         </p>
                       )}
                     </div>
@@ -493,32 +503,34 @@ export default function PlayersClient({
                             onDragStart={() => handleDragStart(player.id)}
                             onDragEnd={handleDragEnd}
                           />
-                          <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                              onClick={() => handleEdit(player)}
-                              disabled={isSubmitting || showAddForm}
-                              className={`${
-                                isSubmitting || showAddForm
-                                  ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                                  : 'bg-blue-600 hover:bg-blue-700'
-                              } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
-                              title="Edit player"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDelete(player.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
-                              title="Delete player"
-                            >
-                              ×
-                            </button>
-                          </div>
+                          {isAdmin && (
+                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={() => handleEdit(player)}
+                                disabled={isSubmitting || showAddForm}
+                                className={`${
+                                  isSubmitting || showAddForm
+                                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                                } text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg transition-all`}
+                                title="Edit player"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(player.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"
+                                title="Delete player"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {playersByLevel['Luyện Khí Kỳ'].length === 0 && (
                         <p className="text-gray-500 text-sm italic w-full text-center py-4">
-                          Drop players here
+                          {isAdmin ? 'Drop players here' : 'No players in this level'}
                         </p>
                       )}
                     </div>
@@ -534,27 +546,31 @@ export default function PlayersClient({
                       {sortedAllPlayers.map((player) => (
                         <div key={player.id} className="relative group">
                           <PlayerCard player={player} />
-                          <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button
-                              onClick={() => handleEdit(player)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm shadow-lg"
-                              title="Edit player"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDelete(player.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm shadow-lg"
-                              title="Delete player"
-                            >
-                              ×
-                            </button>
-                          </div>
+                          {isAdmin && (
+                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={() => handleEdit(player)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm shadow-lg"
+                                title="Edit player"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(player.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm shadow-lg"
+                                title="Delete player"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-center py-8">No players yet. Add your first player!</p>
+                    <p className="text-gray-500 text-center py-8">
+                      {isAdmin ? 'No players yet. Add your first player!' : 'No players yet.'}
+                    </p>
                   )}
                 </div>
               </div>

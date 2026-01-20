@@ -22,7 +22,9 @@ interface MatchCardProps {
   onAddPlayer?: (team: 'team1' | 'team2', playerId: string) => void;
   onRemove?: () => void;
   onStartMatch?: () => void;
+  onStopMatch?: () => void;
   onCompleteMatch?: () => void;
+  startDisabledReason?: string | null;
   editable?: boolean;
 }
 
@@ -45,7 +47,9 @@ export default function MatchCard({
   onAddPlayer,
   onRemove,
   onStartMatch,
+  onStopMatch,
   onCompleteMatch,
+  startDisabledReason = null,
   editable = false,
 }: MatchCardProps) {
   const team1Won = match.winner === 'team1';
@@ -88,7 +92,7 @@ export default function MatchCard({
   };
   
   const playerConflict = hasPlayerConflict();
-  const canStartMatch = hasPlayers && !isStarted && !playerConflict;
+  const canStartMatch = hasPlayers && !isStarted && !playerConflict && !startDisabledReason;
 
   // Calculate match duration
   const getMatchDuration = () => {
@@ -192,7 +196,9 @@ export default function MatchCard({
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60'
               }`}
               title={
-                !hasPlayers
+                startDisabledReason
+                  ? startDisabledReason
+                  : !hasPlayers
                   ? 'Both teams must have at least one player to start the match'
                   : playerConflict
                   ? 'Cannot start match: One or more players are already in another active match'
@@ -200,6 +206,15 @@ export default function MatchCard({
               }
             >
               Start Match
+            </button>
+          )}
+          {editable && isStarted && !isCompleted && onStopMatch && (
+            <button
+              onClick={onStopMatch}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition-all"
+              title="Stop match"
+            >
+              Stop Match
             </button>
           )}
           {editable && isStarted && !isCompleted && hasWinner && onCompleteMatch && (

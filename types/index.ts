@@ -41,6 +41,7 @@ export interface Round {
   team2Lineup: string[]; // player IDs
   matches: Match[];
   completed: boolean;
+  subRounds?: string[][]; // match IDs grouped into sub-rounds
 }
 
 export interface TeamStanding {

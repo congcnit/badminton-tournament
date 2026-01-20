@@ -6,11 +6,10 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
 const navItems = [
-  { href: '/', label: 'Dashboard' },
+  { href: '/', label: 'Standings' },
   { href: '/players', label: 'Players' },
   { href: '/teams', label: 'Teams' },
-  { href: '/rounds', label: 'Rounds' },
-  { href: '/standings', label: 'Standings' },
+  { href: '/matches', label: 'Matches' },
 ];
 
 export default function Navigation() {
@@ -30,7 +29,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              Badminton Tournament
+              Sioux Badminton Tournament
             </h1>
             <div className="flex space-x-4">
               {navItems.map((item) => {

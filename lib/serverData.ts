@@ -28,6 +28,7 @@ interface DbRound {
     completedAt?: string;
   }>;
   completed?: boolean;
+  subRounds?: string[][];
 }
 
 export async function getTournamentData(): Promise<{
@@ -82,6 +83,7 @@ export async function getTournamentData(): Promise<{
       completedAt: match.completedAt,
     })),
     completed: round.completed || false,
+    subRounds: round.subRounds || [],
   }));
 
   return { players, teams, rounds };

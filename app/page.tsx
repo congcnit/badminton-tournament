@@ -1,11 +1,11 @@
-import DashboardClient from '@/components/pages/DashboardClient';
+import StandingsClient from '@/components/pages/StandingsClient';
 import { getTournamentData } from '@/lib/serverData';
 
-export default async function Dashboard() {
+export default async function HomePage() {
   const { players, teams, rounds } = await getTournamentData();
 
   return (
-    <DashboardClient initialPlayers={players} initialTeams={teams} initialRounds={rounds} />
+    <StandingsClient initialPlayers={players} initialTeams={teams} initialRounds={rounds} />
   );
 }
 
