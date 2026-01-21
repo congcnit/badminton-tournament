@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache';
 import connectDB from '@/lib/mongodb';
 import { Player as PlayerModel } from '@/models/Player';
 import { Team as TeamModel } from '@/models/Team';
@@ -36,6 +37,7 @@ export async function getTournamentData(): Promise<{
   teams: Team[];
   rounds: Round[];
 }> {
+  noStore();
   await connectDB();
 
   const [playerDocs, teamDocs, roundDocs] = await Promise.all([
