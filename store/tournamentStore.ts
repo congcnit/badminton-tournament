@@ -76,7 +76,23 @@ const normalizeRound = (doc: any): Round => ({
   subRounds: doc.subRounds || [],
 });
 
-export const useTournamentStore = create<TournamentStore>((set, get) => ({
+export const useTournamentStore = create<TournamentStore>((set, get) => {
+  const startRequest = () => {
+    set((state) => ({
+      pendingRequests: state.pendingRequests + 1,
+      isLoading: true,
+      error: null,
+    }));
+  };
+
+  const finishRequest = () => {
+    set((state) => {
+      const pendingRequests = Math.max(0, state.pendingRequests - 1);
+      return { pendingRequests, isLoading: pendingRequests > 0 };
+    });
+  };
+
+  return ({
   players: [],
   teams: [],
   rounds: [],
@@ -101,11 +117,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   fetchPlayers: async () => {
-    set((state) => ({
-      pendingRequests: state.pendingRequests + 1,
-      isLoading: true,
-      error: null,
-    }));
+    startRequest();
     try {
       const response = await fetch('/api/players');
       if (!response.ok) throw new Error('Failed to fetch players');
@@ -115,19 +127,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to fetch players' });
     } finally {
-      set((state) => {
-        const pendingRequests = Math.max(0, state.pendingRequests - 1);
-        return { pendingRequests, isLoading: pendingRequests > 0 };
-      });
+      finishRequest();
     }
   },
 
   fetchTeams: async () => {
-    set((state) => ({
-      pendingRequests: state.pendingRequests + 1,
-      isLoading: true,
-      error: null,
-    }));
+    startRequest();
     try {
       const { players } = get();
       const response = await fetch('/api/teams');
@@ -138,19 +143,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to fetch teams' });
     } finally {
-      set((state) => {
-        const pendingRequests = Math.max(0, state.pendingRequests - 1);
-        return { pendingRequests, isLoading: pendingRequests > 0 };
-      });
+      finishRequest();
     }
   },
 
   fetchRounds: async () => {
-    set((state) => ({
-      pendingRequests: state.pendingRequests + 1,
-      isLoading: true,
-      error: null,
-    }));
+    startRequest();
     try {
       const response = await fetch('/api/rounds');
       if (!response.ok) throw new Error('Failed to fetch rounds');
@@ -160,10 +158,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to fetch rounds' });
     } finally {
-      set((state) => {
-        const pendingRequests = Math.max(0, state.pendingRequests - 1);
-        return { pendingRequests, isLoading: pendingRequests > 0 };
-      });
+      finishRequest();
     }
   },
 
@@ -178,6 +173,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       ...playerData,
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/players', {
         method: 'POST',
@@ -189,10 +185,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to add player' });
       throw error;
+    } finally {
+      finishRequest();
     }
   },
 
   updatePlayer: async (playerId, playerData) => {
+    startRequest();
     try {
       const response = await fetch(`/api/players/${playerId}`, {
         method: 'PUT',
@@ -215,10 +214,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update player' });
       throw error;
+    } finally {
+      finishRequest();
     }
   },
 
   deletePlayer: async (playerId) => {
+    startRequest();
     try {
       const response = await fetch(`/api/players/${playerId}`, {
         method: 'DELETE',
@@ -234,6 +236,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to delete player' });
       throw error;
+    } finally {
+      finishRequest();
     }
   },
 
@@ -245,6 +249,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       players: [],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/teams', {
         method: 'POST',
@@ -255,10 +260,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set((state) => ({ teams: [...state.teams, newTeam] }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to create team' });
+    } finally {
+      finishRequest();
     }
   },
 
   updateTeamName: async (teamId, name) => {
+    startRequest();
     try {
       const response = await fetch('/api/teams', {
         method: 'PUT',
@@ -271,10 +279,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update team' });
+    } finally {
+      finishRequest();
     }
   },
 
   deleteTeam: async (teamId) => {
+    startRequest();
     try {
       const response = await fetch(`/api/teams/${teamId}`, {
         method: 'DELETE',
@@ -286,6 +297,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to delete team' });
       throw error;
+    } finally {
+      finishRequest();
     }
   },
 
@@ -302,6 +315,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       players: [...team.players, player],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/teams', {
         method: 'PUT',
@@ -315,6 +329,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ teams: teams.map((t) => (t.id === teamId ? updatedTeam : t)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update team' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -328,6 +344,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       players: team.players.filter((p) => p.id !== playerId),
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/teams', {
         method: 'PUT',
@@ -341,6 +358,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ teams: teams.map((t) => (t.id === teamId ? updatedTeam : t)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update team' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -359,6 +378,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       return team;
     });
 
+    startRequest();
     try {
       // Update both teams
       const fromTeam = updatedTeams.find((t) => t.id === fromTeamId);
@@ -389,10 +409,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ teams: updatedTeams });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to move player' });
+    } finally {
+      finishRequest();
     }
   },
 
   updateTeam: async (team) => {
+    startRequest();
     try {
       const response = await fetch('/api/teams', {
         method: 'PUT',
@@ -409,6 +432,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update team' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -430,6 +455,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       subRounds: [],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'POST',
@@ -440,10 +466,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set((state) => ({ rounds: [...state.rounds, newRound] }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to create round' });
+    } finally {
+      finishRequest();
     }
   },
 
   deleteRound: async (roundId) => {
+    startRequest();
     try {
       const response = await fetch(`/api/rounds/${roundId}`, {
         method: 'DELETE',
@@ -455,6 +484,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to delete round' });
       throw error;
+    } finally {
+      finishRequest();
     }
   },
 
@@ -468,6 +499,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       [`${team}Lineup`]: playerIds,
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -482,6 +514,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -496,6 +530,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       subRounds: [],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -509,6 +544,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -523,6 +560,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       subRounds: [],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -536,6 +574,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -554,6 +594,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       subRounds: [],
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -567,6 +608,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -617,6 +660,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       ),
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -630,6 +674,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -640,6 +686,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
     const match = round.matches.find((m) => m.id === matchId);
     if (!match) return;
+
+    const hasUnassignedMatch = round.matches.some(
+      (item) => item.team1Players.length < 2 || item.team2Players.length < 2
+    );
+    if (hasUnassignedMatch) {
+      const errorMsg = 'Assign players for all matches before starting any match';
+      set({ error: errorMsg });
+      alert(errorMsg);
+      return;
+    }
 
     // Check if match has players assigned
     if (match.team1Players.length === 0 || match.team2Players.length === 0) {
@@ -700,6 +756,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       ),
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -713,6 +770,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to start match' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -733,6 +792,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       ),
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -746,6 +806,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to stop match' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -775,6 +837,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       ),
     };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -788,6 +851,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to complete match' });
+    } finally {
+      finishRequest();
     }
   },
 
@@ -798,6 +863,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
     const updatedRound: Round = { ...round, completed: true };
 
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -811,10 +877,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       set({ rounds: rounds.map((r) => (r.id === roundId ? updatedRound : r)) });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
 
   updateRound: async (round) => {
+    startRequest();
     try {
       const response = await fetch('/api/rounds', {
         method: 'PUT',
@@ -837,6 +906,9 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       }));
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Failed to update round' });
+    } finally {
+      finishRequest();
     }
   },
-}));
+  });
+});

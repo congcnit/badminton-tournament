@@ -77,9 +77,24 @@ export default function RoundsClient({
   );
   const startDisabledReasons = useMemo(() => {
     const reasons = new Map<string, string | null>();
-    if (!selectedRound || !selectedRound.subRounds || selectedRound.subRounds.length !== 2) {
+    if (!selectedRound) {
       return reasons;
     }
+
+    const hasUnassignedMatch = selectedRound.matches.some(
+      (match) => match.team1Players.length < 2 || match.team2Players.length < 2
+    );
+    if (hasUnassignedMatch) {
+      selectedRound.matches.forEach((match) => {
+        reasons.set(match.id, 'Assign players for all matches before starting');
+      });
+      return reasons;
+    }
+
+    if (!selectedRound.subRounds || selectedRound.subRounds.length !== 2) {
+      return reasons;
+    }
+
     const groups = selectedRound.subRounds;
     const activeSubRoundIndex = groups.findIndex((group) =>
       group.some((matchId) => {
@@ -579,16 +594,18 @@ export default function RoundsClient({
                           </div>
                         )}
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteRound(round.id);
-                        }}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 text-sm"
-                        title="Delete round"
-                      >
-                        🗑️
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRound(round.id);
+                          }}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 text-sm"
+                          title="Delete round"
+                        >
+                          🗑️
+                        </button>
+                      )}
                     </div>
                   );
                 })}
