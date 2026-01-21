@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { useTournamentStore } from '@/store/tournamentStore';
 import { calculateStandings, getHeadToHeadStats } from '@/utils/standings';
@@ -127,9 +127,8 @@ export default function StandingsClient({
                   const gameDiff = overallGameDiffs.get(standing.teamId) || 0;
                   const pointDiff = overallPointDiffs.get(standing.teamId) || 0;
                   return (
-                    <>
+                    <Fragment key={standing.teamId}>
                       <tr
-                        key={standing.teamId}
                         className={`hover:bg-gray-700/50 transition-colors ${
                           isTopThree ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : ''
                         }`}
@@ -239,7 +238,7 @@ export default function StandingsClient({
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
                 {standings.length === 0 && (
