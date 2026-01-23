@@ -106,9 +106,6 @@ export default function StandingsClient({
                     Wins
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    Losses
-                  </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     Game Diff
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -161,11 +158,6 @@ export default function StandingsClient({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span className="text-red-400 font-semibold">
-                            {standing.losses}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span
                             className={`font-semibold ${
                               gameDiff > 0
@@ -202,7 +194,7 @@ export default function StandingsClient({
                       </tr>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={8} className="px-6 py-4 bg-gray-900/40">
+                          <td colSpan={7} className="px-6 py-4 bg-gray-900/40">
                             {headToHead.length === 0 ? (
                               <div className="text-sm text-gray-400">
                                 No head-to-head stats yet.
@@ -243,7 +235,7 @@ export default function StandingsClient({
                 })}
                 {standings.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                       No rounds completed yet. Complete some rounds to see standings.
                     </td>
                   </tr>
